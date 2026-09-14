@@ -36,9 +36,9 @@ namespace larg4 {
     , fISTPC{*fGeometry}
     , fSCE(lar::providerFrom<spacecharge::SpaceChargeService>())
     , fBinomialGen{CLHEP::RandBinomial(Engine)}
-    , fUseGapAwareField(false)
     , fMaxGap(0)
   {
+    //fMaxGap > 0 means that gap tool was configured in IonAndScint
     MF_LOG_INFO("ISCalcCorrelated") << "IonizationAndScintillation/ISCalcCorrelated Initialize.";
 
     fScintPreScale = lar::providerFrom<detinfo::LArPropertiesService>()->ScintPreScale();
@@ -171,8 +171,7 @@ namespace larg4 {
   double ISCalcCorrelated::EFieldAtStep(double efield, sim::SimEnergyDeposit const& edep)
   {
     // electric field outside active volume set to zero
-    if (!fISTPC.isScintInActiveVolume(edep.MidPoint()) && !fUseGapAwareField) return 0.;
-
+    if (!fISTPC.isScintInActiveVolume(edep.MidPoint()) && !(fMaxGap > 0)) return 0.;
     geo::Vector_t elecvec{};
 
     geo::TPCID tpcid = TPCIDAtPosition(edep.MidPoint());
@@ -226,7 +225,7 @@ namespace larg4 {
   {
 
     // electric field outside active volume set to zero
-    if (!fISTPC.isScintInActiveVolume(edep.MidPoint()) && !fUseGapAwareField) return 0.;
+    if (!fISTPC.isScintInActiveVolume(edep.MidPoint()) && !(fMaxGap > 0)) return 0.;
 
     geo::Vector_t stepvec = edep.Start() - edep.End();
     geo::Vector_t elecvec{};
@@ -285,7 +284,7 @@ namespace larg4 {
   {
     geo::TPCID tpcid = fGeometry->PositionToTPCID(point);
 
-    if (fUseGapAwareField && !tpcid) {
+    if (fMaxGap > 0 && !tpcid) {
       // If we want to use the true electric field in the CRP gap, we need to check if the position is in the gap, and if so, use the field from the nearest TPC instead of returning 0.
       tpcid = FindTPCForGap(point);
     }
@@ -329,7 +328,6 @@ namespace larg4 {
 
       if (tpc_plus && tpc_minus) { return tpc_plus; }
     }
-
     // Not a valid gap (likely outside the active volume of the detector)
     return {};
   }

@@ -42,7 +42,6 @@ namespace larg4 {
     ISCalcData CalcIonAndScint(detinfo::DetectorPropertiesData const& detProp,
                                sim::SimEnergyDeposit const& edep) override;
 
-    void SetGapAware(bool v) { fUseGapAwareField = v; }
     void SetMaxGap(double max_gap) { fMaxGap = max_gap; }
 
   private:
@@ -52,7 +51,6 @@ namespace larg4 {
     ISTPC fISTPC;
     const spacecharge::SpaceCharge* fSCE;
     CLHEP::RandBinomial fBinomialGen;
-    bool fUseGapAwareField;
     double fMaxGap;
 
     double fGeVToElectrons;      ///< from LArG4Parameters service

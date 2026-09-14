@@ -152,6 +152,8 @@ namespace larg4 {
     else if (calcTag.label() == "Correlated") {
       auto const detProp = art::ServiceHandle<detinfo::DetectorPropertiesService>()->DataForJob();
       fISAlg = std::make_unique<ISCalcCorrelated>(detProp, fEngine);
+      auto fISAlg_gap = dynamic_cast<ISCalcCorrelated*>(fISAlg.get());
+      if (fGapTool) fISAlg_gap->SetMaxGap(fGapTool->MaxGap());
     }
     else if (calcTag.label() == "NEST")
       fISAlg = std::make_unique<ISCalcNESTLAr>(fEngine);
@@ -237,17 +239,8 @@ namespace larg4 {
       for (sim::SimEnergyDeposit const& edepi : *edeps) {
         bool isGap = fGapTool && edeps.provenance()->productInstanceName() == fGapTool->Volume();
 
-        ISCalcCorrelated* fISAlg_gap = nullptr;
-
-        if (isGap) {
-          fISAlg_gap = dynamic_cast<ISCalcCorrelated*>(fISAlg.get());
-          if (fISAlg_gap) fISAlg_gap->SetGapAware(true);
-          if (fISAlg_gap) fISAlg_gap->SetMaxGap(fGapTool->MaxGap());
-        }
-
         auto const isCalcData = fISAlg->CalcIonAndScint(detProp, edepi);
 
-        if (fISAlg_gap) fISAlg_gap->SetGapAware(false);
         int ph_num = round(isCalcData.numPhotons);
         int ion_num = round(isCalcData.numElectrons);
         float scintyield = isCalcData.scintillationYieldRatio;
